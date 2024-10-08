@@ -1,0 +1,177 @@
+---
+title: "Homework 02"
+author: "Noah H and Claire M"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+---
+
+
+For this homework, you will save the `R Markdown` (e.g., `.Rmd`) homework document and save it to your `/report` project directory on your computer. Save a new copy of this file so that its name has the prefix `hw03-Lastname-FirstInitial`. Full name example: `hw03-cookg.Rmd`.
+
+The homework is also designed to help you work through the process of organizing files for your project.
+
+Feel free to work with a partner (add both names) but understand that the work submitted should be your contributions.
+
+**The homework utilizes the modules listed below. My assumption is that you are completing readings and reading/referring to modules before consulting outside sources. Grading will be based on that assumption and solutions provided in course materials.**
+
+Relevant Modules:
+
+- data frame manipulation and wrangling
+- the grammar of graphics
+- visualizing associations
+
+**Do not** create any variables outside of **{dplyr}** functions. Do not create objects not needed. All problems can be answered using functions from the listed modules and any other routine functions for data reading and manipulation.
+
+*Make sure to enter your author name in the YAML code*  
+
+
+
+# **Questions:**
+
+## **Load libraries**
+
+Load the libraries that you will need to answer the questions. Do not load extras.
+
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+
+## **Read a Local Data File**
+
+In the code block, write code using `read.csv()` to read the data file named `"cleaned-2023-cms-invite.csv"` which is in `/data/processed` or on the course site data tab. Do not hard code the path, use {here}. Assign the data to an object named something like `SWIM`. For all questions, pipe the data frame to relevant functions. Do not explicitly pass the data frame to a `.data` parameter.
+
+```{r message=FALSE, warning=FALSE}
+SWIM <- read.csv(here::here("data","processed","cleaned-2023-cms-invite.csv"))
+SWIM
+```
+
+## **Make a scatter plot using a numeric and a non-numeric variable**
+
+Filter the data to include *all events except for the IM and Medley*. Create a plot that plots the event time as a function of the event type.
+
+```{r message=FALSE, warning=FALSE}
+
+SWIM |>
+  filter(!(Event %in% c("IM", "Medley"))) |>
+  ggplot(mapping = aes(x= Event, y= Time)) +
+  geom_point()
+
+```
+
+## **Make a scatter plot using numeric variables**
+
+(a) Filter the data to include all events except for the IM and Medley. Create a point plot that plots the event time as a function of the split time.
+
+```{r message=FALSE, warning=FALSE}
+
+SWIM |>
+  filter(!(Event %in% c("IM", "Medley"))) |>
+  ggplot(mapping = aes(x= Split50, y= Time)) +
+  geom_point()
+
+```
+
+(b) Provide a Loess fit to your split time and event time plot so that you have a different fit for each event. Different fits should be in different colors.
+
+```{r message=FALSE, warning=FALSE}
+
+SWIM |>
+  filter(!(Event %in% c("IM", "Medley"))) |>
+  ggplot(mapping = aes(x= Split50, y= Time, color= Event)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE)
+
+
+```
+
+(c) After looking at the plot, remove any values that you might interpret as extreme. Modify the plot with them removed.
+
+```{r message=FALSE, warning=FALSE}
+
+## Check
+SWIM |>
+  filter(!(Event %in% c("IM", "Medley")) &
+         Time < 250) |>
+  ggplot(mapping = aes(x= Split50, y= Time, color= Event)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE)
+
+
+```
+
+(d) Provide a linear model fit to your split time and event time plot so that you have a different fit for each event type. Different fits should be in different colors. Keep the extreme values removed, extend the fit lines to cover the full range, and remove the error shading for the fit (just so that you can see fits somewhat better).
+
+```{r message=FALSE, warning=FALSE}
+
+SWIM |>
+  filter(!(Event %in% c("IM", "Medley")) &
+         Time < 250) |>
+  ggplot(mapping = aes(x= Split50, y= Time, color= Event)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              se = FALSE,
+              fullrange = TRUE)
+
+
+```
+
+## **Interpret data**
+
+Explain any relationships or patterns that you see in the previous plot.
+
+**EXPLAIN:** Generally, there is a positive relationship between split time and event time across all events. For breaststroke and butterfly, the relationship is arguably the strongest. The graph splits into two groups, one which hovers around 40-80 seconds, and another that is around 83-120, indicating that there is a distinction in performance between the groups.
+
+
+# **Multiclass scatterplots**
+
+(a) Create a multiclass scatter plot to explore the data in a new way. If you plot the same boring variables used in class examples or other questions presented here, don't expect full credit. If there are NAs in the legend, filter them out.
+
+
+```{r message=FALSE, warning=FALSE}
+
+SWIM |>
+  filter(!(Event %in% c("IM", "Medley")) &
+         Time < 250) %>% 
+  ggplot(mapping = aes(x= Split50, y= Time, shape=Team, color = Team)) +
+  geom_point() +
+  geom_smooth(method = "lm",
+              se = FALSE,
+              fullrange = TRUE) +
+  facet_wrap(~School)
+
+```
+
+
+
+(b) Explain why you created this plot.
+
+We wanted to study the performance differences between single-gender and mixed-gender teams for Pomona-Pitzer and Claremont-Mudd-Scripps.
+
+
+(c) Explain what you see in the data.
+
+We see that for men and women in both PP and CMS teams, as split times rise, so do overall times rise. Interestingly, for the mixed teams, having a higher split time is not necessarily associated with having a higher overall time, and seems to be associated with a lower overall time for the PP teams. My guess is that the higher split times not being reflective of higher overall times is a reflection of the girls going first, who are generally slower swimmers at the collegiate levels. 
+
+## **Bonus Challenge:**
+
+Filter out any times that are greater than 3 standard deviations above the mean. Feel free to filter the data using the IQR if you are familiar with the concept but do not use ChatGPT. Think through the problem. Read the documentation.
+
+```{r message=FALSE, warning=FALSE}
+summary(SWIM$Time)
+mean <- mean(SWIM$Time)
+standard_dev <- sd(SWIM$Time)
+
+SWIM %>% filter(Time < mean + (3*standard_dev))
+```
+
+
+Other Notes:
+
+y/n: Did you read the modules for the topic? no
+y/n: Did you use ChatGPT or similar LLM to help you? no
+
+
+Finally, knit an `html` file and upload to:
+https://ln5.sync.com/dl/a038628f0/wwfifjxk-f7rfshin-rkedi3y8-77f9zaii
+
