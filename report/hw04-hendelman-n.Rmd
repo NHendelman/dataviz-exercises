@@ -1,0 +1,77 @@
+---
+title: "hw04-nhendelman-n.Rmd"
+output: html_document
+date: "2024-10-08"
+name: Claire, Noah, Raj
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(viridis)
+```
+
+## Recreate the graph
+
+```{r data}
+data <- readr::read_csv(
+"https://raw.githubusercontent.com/slicesofdata/dataviz24/main/data/tfrrs/ht-cleaned.csv")
+```
+
+```{r data filtering}
+data <- data %>%
+  filter(!is.na(Year)) %>%
+  group_by(Year,Season) %>%
+  mutate(max_season = max(Mark))
+
+SCIAC_Champ_data <- data %>%
+  filter(Meet %in% c("SCIAC Championships",
+                     "2011 SCIAC Track & Field Championships",
+                     "2012 SCIAC Track & Field Championships",
+                     "2013 SCIAC Track & Field Championships",
+                     "2014 SCIAC T&F Championships",
+                     "2015 SCIAC Track & Field Championships",
+                     "SCIAC Track & Field Championships",
+                     "2017 SCIAC T&F Championships",
+                     "SCIAC Outdoor Track & Field Championships",
+                     "SCIAC Track & Field Conference Championships",
+                     "SCIAC Multi Dual WC/OXY/CMS/CU/CIT",
+                     "SCIAC Track & Field Championships",
+                     "2023 SCIAC T&F Championships")) %>%
+  na.omit() %>%
+  group_by(Season,Year) %>%
+  mutate(best_performance_SCIAC = max(Mark))
+#
+# combined_data <- data_no_SCIAC_Champ %>%
+#   left_join(SCIAC_Champ_data %>% select(Year, Season, best_performance_SCIAC),
+#             by = c("Year", "Season")) %>%
+#   mutate(point_show = if_else(best_performance_SCIAC>=max_season_no_SCIAC,best_performance_SCIAC,NA))
+#
+
+   
+```
+
+
+```{r graph}
+data %>%
+  ggplot(mapping = aes(x = Season,y = Mark, color = Year)) +
+  geom_point(alpha = 0.2,
+             size = 2,
+             position = position_jitter(
+               seed= 10
+             )
+             ) +
+  geom_line(data = SCIAC_Champ_data,
+            mapping=aes(x=Season,y=best_performance_SCIAC,color=Year)) +
+  geom_point(data = SCIAC_Champ_data,
+             mapping = aes(x=Season,y=best_performance_SCIAC, color = Year),
+             size = 3,
+             alpha=0.3) +
+  scale_x_continuous(breaks = c(2012, 2016, 2020, 2024)) +
+  scale_y_continuous(limits = c(0,70),
+                     breaks = c(20, 40, 60)) +
+  scale_color_manual(values = c("green","blue","purple","red")) +
+  labs(y = "Distance (meters)") +
+  theme_classic()
+```
